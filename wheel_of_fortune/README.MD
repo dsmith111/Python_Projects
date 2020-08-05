@@ -1,0 +1,1 @@
+This program is a standalone python game of the show "Wheel Of Fortune"
