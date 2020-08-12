@@ -1,0 +1,1 @@
+This is a module used concomitantly with the API project. It allows for the caching of data pulled using API.
