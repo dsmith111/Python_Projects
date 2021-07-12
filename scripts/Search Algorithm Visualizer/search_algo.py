@@ -4,125 +4,178 @@ import copy
 
 class DFS():
 
+    directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
+    map_items = {
+        "obstacle": 1,
+        "treasure": 5,
+        "history": 2,
+        "best_path": 20
+    }
+    count = 0
+    skips = 1
+
     def __init__(self, graph, starting_loc=None):
         self.map = graph
-        self.starting_loc = starting_loc
         self.current_loc = starting_loc
+        self.history = {str(starting_loc): (None, 0)}
+        self.best_path = []
         self.found_target = False
         self.target_loc = None
         self.shape = (len(graph), len(graph[0]))
+        self.search_stack = [(*starting_loc, 0)]
         self.fig = None
         self.ax = None
+        self.im = None
 
     def start_map(self):
-        self.fig = plt.figure()
-        self.ax = self.fig.gca()
+        self.fig, self.ax = plt.subplots()
+        self.im = self.ax.imshow(self.map)
         self.fig.show()
 
     def show_map(self):
-        plt.imshow(self.map)
+        self.im.set_data(self.map)
         self.fig.canvas.draw()
-        plt.pause(0.00000001)
 
-    def search_children(self, loc=None):
-        r, c = loc or self.starting_loc
-        self.current_loc = (r, c)
-        self.map[r][c] = 3
-        self.show_map()
-        r_dif = -1
-        c_dif = -1
+    def push_stack(self, item):
+        self.search_stack.append(item)
 
-        while (not self.found_target and r_dif < 2):
+    def pull_stack(self):
+        if(len(self.search_stack)):
+            return self.search_stack.pop()
 
-            while(c_dif < 2):
+    def back_track(self):
 
-                if (abs(c_dif) + abs(r_dif) == 2):
-                    c_dif += 1
-                    continue
+        if (self.history[str(self.current_loc)][0] != None):
+            self.map[self.current_loc[0]][self.current_loc[1]
+                                          ] = self.map_items["best_path"]
+            self.current_loc = self.history[str(self.current_loc)][0]
+            self.best_path.insert(0, self.current_loc)
+            self.show_map()
+            self.back_track()
+        else:
+            self.search_stack.clear()
 
-                new_r = abs(r + r_dif)
-                new_c = abs(c + c_dif)
+    def search_children(self):
+
+        while(len(self.search_stack)):
+            self.count += 1
+            r, c, current_step = self.pull_stack()
+            self.current_loc = (r, c)
+
+            if (self.map[r][c] == self.map_items["treasure"]):
+                self.found_target = True
+                self.target_loc = ((r, c), current_step)
+                self.back_track()
+                break
+
+            self.map[r][c] = self.map_items["history"]
+            if(self.count % self.skips == 0):
+                self.show_map()
+
+            for direction in self.directions:
+                new_r, new_c = [abs(sum(pair))
+                                for pair in zip(self.current_loc, direction)]
 
                 if (new_r < self.shape[0] and new_c < self.shape[1]):
 
-                    if (self.map[new_r][new_c] == 2):
-                        self.found_target = True
-                        self.target_loc = (new_r, new_c)
-                        break
+                    if (self.map[new_r][new_c] not in [self.map_items["history"], self.map_items["obstacle"]] and (new_r, new_c) not in self.search_stack):
+                        self.push_stack((new_r, new_c, current_step + 1))
+                        string_hist = str((new_r, new_c))
 
-                    if (self.map[new_r][new_c] == 0):
-                        self.search_children((new_r, new_c))
-
-                c_dif += 1
-            r_dif += 1
-            c_dif = -1
+                        if (self.history.get(string_hist, False)):
+                            if (self.history[string_hist][1] > current_step):
+                                self.history[string_hist] = (
+                                    (r, c), current_step)
+                        else:
+                            self.history[string_hist] = ((r, c), current_step)
 
 
 class BFS():
 
+    directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
+    map_items = {
+        "obstacle": 1,
+        "treasure": 5,
+        "history": 2,
+        "best_path": 20
+    }
+    count = 0
+    skips = 400
+
     def __init__(self, graph, starting_loc=None):
         self.map = graph
-        self.starting_loc = starting_loc
         self.current_loc = starting_loc
+        self.history = {str(starting_loc): (None, 0)}
+        self.best_path = []
         self.found_target = False
         self.target_loc = None
         self.shape = (len(graph), len(graph[0]))
-        self.search_queue = []
+        self.search_queue = [(*starting_loc, 0)]
         self.fig = None
         self.ax = None
+        self.im = None
 
     def start_map(self):
-        self.fig = plt.figure()
-        self.ax = self.fig.gca()
+        self.fig, self.ax = plt.subplots()
+        self.im = self.ax.imshow(self.map)
         self.fig.show()
 
     def show_map(self):
-        plt.imshow(self.map)
+        self.im.set_data(self.map)
         self.fig.canvas.draw()
-        plt.pause(0.00000001)
 
     def push_queue(self, item):
         self.search_queue.append(item)
 
     def pull_queue(self):
-        return self.search_queue.pop(0)
+        if(len(self.search_queue)):
+            return self.search_queue.pop(0)
 
-    def search_children(self, loc=None):
-        r, c = loc or self.starting_loc
-        self.current_loc = (r, c)
-        self.map[r][c] = 3
-        self.show_map()
-        r_dif = -1
-        c_dif = -1
+    def back_track(self):
 
-        while (not self.found_target and r_dif < 2):
+        if (self.history[str(self.current_loc)][0] != None):
+            self.map[self.current_loc[0]][self.current_loc[1]
+                                          ] = self.map_items["best_path"]
+            self.current_loc = self.history[str(self.current_loc)][0]
+            self.best_path.insert(0, self.current_loc)
+            self.show_map()
+            self.back_track()
+        else:
+            self.search_queue.clear()
 
-            while(c_dif < 2):
+    def search_children(self):
 
-                if (abs(c_dif) + abs(r_dif) == 2):
-                    c_dif += 1
-                    continue
+        while(len(self.search_queue)):
+            self.count += 1
+            r, c, current_step = self.pull_queue()
+            self.current_loc = (r, c)
 
-                new_r = abs(r + r_dif)
-                new_c = abs(c + c_dif)
+            if (self.map[r][c] == self.map_items["treasure"]):
+                self.found_target = True
+                self.target_loc = ((r, c), current_step)
+                self.back_track()
+                break
+
+            self.map[r][c] = self.map_items["history"]
+            if(self.count % self.skips == 0):
+                self.show_map()
+
+            for direction in self.directions:
+                new_r, new_c = [abs(sum(pair))
+                                for pair in zip(self.current_loc, direction)]
 
                 if (new_r < self.shape[0] and new_c < self.shape[1]):
 
-                    if (self.map[new_r][new_c] == 2):
-                        self.found_target = True
-                        self.target_loc = (new_r, new_c)
-                        break
+                    if (self.map[new_r][new_c] not in [self.map_items["history"], self.map_items["obstacle"]] and (new_r, new_c) not in self.search_queue):
+                        self.push_queue((new_r, new_c, current_step + 1))
+                        string_hist = str((new_r, new_c))
 
-                    if (self.map[new_r][new_c] == 0 and (new_r, new_c) not in self.search_queue):
-                        self.push_queue((new_r, new_c))
-
-                c_dif += 1
-            r_dif += 1
-            c_dif = -1
-
-        next_child = self.pull_queue()
-        if (next_child != None):
-            self.search_children(next_child)
+                        if (self.history.get(string_hist, False)):
+                            if (self.history[string_hist][1] > current_step):
+                                self.history[string_hist] = (
+                                    (r, c), current_step)
+                        else:
+                            self.history[string_hist] = ((r, c), current_step)
 
 
 def prep_graph():
@@ -153,3 +206,5 @@ if __name__ == "__main__":
     print("Current location: ", searcher.current_loc)
     print("Found target: ", searcher.found_target)
     print("Target location: ", searcher.target_loc)
+    print("Best Path: \n{}".format(searcher.best_path))
+    input("Press Enter to Continue.")

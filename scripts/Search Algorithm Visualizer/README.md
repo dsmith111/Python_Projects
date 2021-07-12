@@ -3,8 +3,8 @@
 This Python script runs a search algorithm with live graph traversal updates based on a graph created in a text file. The graph, maze.txt, is made up of:
 
 - 1 for obstacles
-- 0 for paths
-- 2 for goals
+- 0 for unexplored paths
+- 5 for goals
 
 ## Types of search algorithms
 
